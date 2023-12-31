@@ -1,0 +1,61 @@
+{
+	"$schema": "https://raw.githubusercontent.com/TypeScriptToLua/TypeScriptToLua/master/tsconfig-schema.json",
+	"compilerOptions": {
+		"lib": ["esnext"],
+		"module": "ES2022",
+		"moduleDetection": "force",
+		"moduleResolution": "Bundler",
+		"noImplicitReturns": true,
+		"noUncheckedIndexedAccess": true,
+		"noUnusedLocals": false,
+		"noUnusedParameters": false,
+		"outDir": "app",
+		"plugins": [
+			{
+				"name": "typescript-tstl-plugin"
+			}
+		],
+		"rootDir": "src",
+		"sourceMap": true,
+		"strict": true,
+		"target": "esnext",
+		"typeRoots": [
+			"./@types",
+			"./node_modules/@ts-defold",
+			"./node_modules/@types",
+			"./node_modules/@typescript-to-lua"
+		],
+		"types": ["language-extensions", "tsd-boom", "tsd-xmath", "types"],
+		"verbatimModuleSyntax": true
+	},
+	"exclude": ["./node_modules/*", "./plugins/*"],
+	"tstl": {
+		"luaLibImport": "require-minimal",
+		"luaPlugins": [
+			{
+				"globals": {
+					"functions": [
+						"final",
+						"fixed_update",
+						"init",
+						"on_input",
+						"on_message",
+						"on_reload",
+						"update"
+					]
+				},
+				"match": ".*\\..*script.ts$",
+				"name": "@ts-defold/tstl-export-as-global"
+			},
+			{
+				"name": "@ts-defold/tstl-userdata-sugar"
+			},
+			{
+				"name": "tstl-trim-extensions"
+			}
+		],
+		"luaTarget": "5.1",
+		"noHeader": true,
+		"sourceMapTraceback": true
+	}
+}

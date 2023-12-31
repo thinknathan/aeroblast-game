@@ -1,0 +1,48 @@
+[bootstrap]
+main_collection = /main/main.collectionc
+render = /render/boomCustom.renderc
+
+[script]
+shared_state = 1
+
+[display]
+width = 960
+height = 540
+update_frequency = 60
+
+[android]
+input_method = HiddenInputField
+
+[project]
+title = Aeroblast
+dependencies#0 = https://github.com/britzl/boom/archive/refs/heads/main.zip
+dependencies#1 = https://github.com/thejustinwalsh/defold-xmath/archive/refs/heads/main.zip
+
+[input]
+game_binding = /boom/boom.input_bindingc
+use_accelerometer = 0
+
+[graphics]
+default_texture_min_filter = nearest
+default_texture_mag_filter = nearest
+
+[physics]
+use_fixed_timestep = 1
+
+[engine]
+fixed_update_frequency = 30
+
+[html5]
+wasm_streaming = 1
+htmlfile = /web/engine_template.html
+
+[sprite]
+subpixels = 0
+max_count = 512
+
+[label]
+subpixels = 0
+
+[native_extension]
+app_manifest = /appmanifest.appmanifest
+
