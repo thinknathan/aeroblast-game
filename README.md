@@ -1,3 +1,5 @@
+<img src="_docs/github-banner.png" alt="Aeroblast">
+
 # Aeroblast
 
 Aeroblast is a simple but addictive top-down auto-shooter. Move using the cursor keys or WASD. Aim at enemies - your character will automatically shoot. Collect power-ups to gain a faster fire rate, restore health, and more. Win by surviving the full ten minute play time.

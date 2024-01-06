@@ -59,3 +59,10 @@
 
 # Defold Project Settings
 *.project linguist-language=INI
+
+# Defold Manifest
+*.appmanifest linguist-language=YAML
+
+# Exclude files from archive
+.gitattributes export-ignore
+_docs export-ignore
