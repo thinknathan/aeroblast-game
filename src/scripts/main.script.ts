@@ -14,7 +14,7 @@ interface Game {
 	readonly __mainAtlas: hash;
 }
 
-export function init(this: Game): void {
+export const init: ScriptInit<Game> = function (this: Game): void {
 	// Create properties that can be set in the editor.
 	go.property('mainAtlas', resource.atlas());
 
@@ -31,4 +31,4 @@ export function init(this: Game): void {
 		// Show the start screen
 		show('start');
 	});
-}
+};

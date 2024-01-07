@@ -8,6 +8,8 @@
 import * as utils from '../utils';
 import * as state from '../state';
 
+const entities: LuaSet<BulletType> = new LuaSet();
+
 const BULLET_TAG = 'bullet';
 const BULLET_ALIVE_TAG = 'bullet-active';
 const BULLET_DEAD_TAG = 'bullet-inactive';
@@ -24,20 +26,15 @@ const ANGLE_LEFT = -270;
 const ANGLE_TOP_LEFT = -315;
 
 // By default, there's a max of 128 sprites and physics objects in the engine.
-// We've increased the sprite limit, but we're still trying to keep within a relatively small limit.
-const MAX_BULLETS = 20;
+// You can increase the limit, but for this project we'll try to stay under 128 total objects.
+const MAX_BULLETS = 5;
 
 // The duration a shot stays active, in seconds
 const SHOT_DURATION = 1.5;
 
-// The maximum scale value for bullets
-const MAX_SCALE = 2;
-
 // The coordinates the bullets will be stored when inactive
-const INACTIVE_X1 = -50;
-const INACTIVE_X2 = -250;
-const INACTIVE_Y1 = -50;
-const INACTIVE_Y2 = -250;
+const INACTIVE_X1 = -500;
+const INACTIVE_Y1 = -500;
 
 type BulletType = BoomGameObject<
 	[
@@ -47,7 +44,6 @@ type BulletType = BoomGameObject<
 		RotateComp,
 		AnchorComp,
 		OpacityComp,
-		ScaleComp,
 		MoveComp,
 		TimerComp,
 	]
@@ -72,6 +68,31 @@ const audioRandomize = () => {
 };
 /** @inlineEnd */
 
+const playerGroup = hash('player');
+const enemyGroup = hash('enemy');
+const itemGroup = hash('item');
+const bulletGroup = hash('bullet');
+const FRAME = 0.03;
+
+/** @inlineStart */
+function setPhysicsGroup(bullet: BulletType) {
+	physics.set_group(bullet.area_url!, bulletGroup);
+	physics.set_maskbit(bullet.area_url!, enemyGroup, true);
+	physics.set_maskbit(bullet.area_url!, bulletGroup, false);
+	physics.set_maskbit(bullet.area_url!, itemGroup, false);
+	physics.set_maskbit(bullet.area_url!, playerGroup, false);
+}
+/** @inlineEnd */
+
+const deactivateFn = (obj: BulletType) => {
+	obj.unuse(BULLET_ALIVE_TAG);
+	obj.use(BULLET_DEAD_TAG);
+	obj.opacity = 0;
+	obj.speed = 0;
+	obj.pos.x = INACTIVE_X1;
+	obj.pos.y = INACTIVE_Y1;
+};
+
 const initFn = () => {
 	// Create a URL for the audio controller so we can do audio!
 	if (audioController === '') {
@@ -80,7 +101,7 @@ const initFn = () => {
 
 	// Declare some info outside of the loop
 	const atlasContent = { atlas: utils.constants.ATLAS } as const;
-	const areaContent = { shape: 'auto' } as const;
+	const areaContent = { width: 20, height: 20, shape: 'rect' } as const;
 	const lifeTimerError = () => {
 		print(
 			'bullets.ts Error: The init function on the timer object was not found',
@@ -95,17 +116,34 @@ const initFn = () => {
 		});
 		const bullet = add([
 			sprite('bullet01', atlasContent),
-			pos(randi(INACTIVE_X1, INACTIVE_X2), randi(INACTIVE_Y1, INACTIVE_Y2)),
+			pos(INACTIVE_X1, INACTIVE_Y1),
 			area(areaContent),
 			rotate(0),
 			anchor('center'),
 			opacity(0),
-			scale(1),
 			move(vec2(0, 0), state.game.player.attackVelocity),
 			timerObj,
 			BULLET_TAG,
 			BULLET_DEAD_TAG,
 		]) as BulletType;
+
+		bullet.add([
+			timer(FRAME, () => {
+				// Set physics group so objects don't collide with others of the same type
+				if (bullet.area_url !== undefined) {
+					setPhysicsGroup(bullet);
+				} else {
+					print('bullets.ts Error: No area_url in bullet');
+					// Fallback: try again in a second
+					timer(1, () => {
+						// Set physics group so objects don't collide with others of the same type
+						if (bullet.area_url !== undefined) {
+							setPhysicsGroup(bullet);
+						}
+					});
+				}
+			}),
+		]);
 
 		if (timerObj.init) {
 			bullet.lifeTimerReset = timerObj.init;
@@ -116,43 +154,25 @@ const initFn = () => {
 	}
 };
 
-const deactivateFn = (obj: BulletType) => {
-	obj.unuse(BULLET_ALIVE_TAG);
-	obj.use(BULLET_DEAD_TAG);
-	obj.opacity = 0;
-	obj.speed = 0;
-	obj.pos.x = randi(INACTIVE_X1, INACTIVE_X2);
-	obj.pos.y = randi(INACTIVE_Y1, INACTIVE_Y2);
-};
-
 const activateFn = (
-	obj: BulletType,
+	bullet: BulletType,
 	x: number,
 	y: number,
 	rotation: number,
 	dirX: number,
 	dirY: number,
 ) => {
-	if (obj.area_url !== undefined) {
-		physics.set_group(obj.area_url, 'player');
-		physics.set_maskbit(obj.area_url, 'enemy', true);
-	} else {
-		print('bullets.ts Error: No area_url in bullet');
-	}
+	bullet.unuse(BULLET_DEAD_TAG);
+	bullet.use(BULLET_ALIVE_TAG);
 
-	obj.unuse(BULLET_DEAD_TAG);
-	obj.use(BULLET_ALIVE_TAG);
+	bullet.lifeTimerReset();
 
-	obj.lifeTimerReset();
+	bullet.pos.x = x;
+	bullet.pos.y = y;
 
-	obj.pos.x = x;
-	obj.pos.y = y;
+	bullet.rotate(rotation);
 
-	obj.rotate(rotation);
-
-	obj.opacity = 1;
-
-	obj.scale_to(1);
+	bullet.opacity = 1;
 
 	if (dirX === 0 && dirY === 0) {
 		if (rotation === ANGLE_TOP) {
@@ -178,20 +198,14 @@ const activateFn = (
 		}
 	}
 
-	obj.direction.x = dirX;
-	obj.direction.y = dirY;
+	bullet.direction.x = dirX;
+	bullet.direction.y = dirY;
 
-	obj.speed = state.game.player.attackVelocity;
+	bullet.speed = state.game.player.attackVelocity;
 
 	// Change sprite once the player's attack power is +50%
 	if (state.game.player.attackPower >= POWER_THRESHOLD_FOR_BIGGER_SPRITE) {
-		obj.play('bullet02');
-	}
-
-	if (state.game.player.attackPower < MAX_SCALE) {
-		// Increase size of bullet according to player's attack power
-		// But only if it's less than max scale
-		obj.scale_to(state.game.player.attackPower, state.game.player.attackPower);
+		bullet.play('bullet02');
 	}
 
 	// Play sound for every projectile fired
@@ -214,8 +228,6 @@ const fireBulletFn = (
 		}
 	}
 };
-
-const entities: LuaSet<BulletType> = new LuaSet();
 
 interface Bullets {
 	activate: (

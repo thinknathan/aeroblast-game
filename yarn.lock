@@ -96,19 +96,14 @@
     xml2js "^0.4.23"
     yargs "^17.2.1"
 
-"@ts-defold/tstl-export-as-global@~1.0.0":
-  version "1.0.2"
-  resolved "https://registry.yarnpkg.com/@ts-defold/tstl-export-as-global/-/tstl-export-as-global-1.0.2.tgz#da98176dd21719edc9006e82df388373d3cc2b24"
-  integrity sha512-sowPgp90Rts4pYaELvu8egoN+/hs5p/5jT+mnKUv9d07OaT+vrrKRS4IcPzYFHawOcPIUGR/k63ceFOPKa0EXw==
-
 "@ts-defold/tstl-userdata-sugar@~1.0.0":
   version "1.0.1"
   resolved "https://registry.yarnpkg.com/@ts-defold/tstl-userdata-sugar/-/tstl-userdata-sugar-1.0.1.tgz#a22a696b1bdfe9dc99155894ed53f3d8fbdecc1a"
   integrity sha512-iEBt+EpMOvBnpr1/fwUMirVGUqUAE9yFIuzi4ir7BOJvQEEtqAgTvyco2RIms9D7OzEL2jqBSzt3NjoD7zdKpQ==
 
 "@ts-defold/types@git+https://git@github.com/thinknathan/ts-defold-types.git#^1.3.0":
-  version "1.3.16"
-  resolved "git+https://git@github.com/thinknathan/ts-defold-types.git#807e9c145db05e83455d21a3af34adf539546b4b"
+  version "1.3.17"
+  resolved "git+https://git@github.com/thinknathan/ts-defold-types.git#88c75040cadc3976f1ad36956a91bb8d0e5c1f97"
   dependencies:
     lua-types "^2.10.1"
 
@@ -232,9 +227,9 @@ acorn-jsx@^5.3.2:
   integrity sha512-rq9s+JNhf0IChjtDXxllJ7g41oZk5SlXtp0LHwyA5cejwn7vKmKp4pPri6YEePv2PU65sAsegbXtIinmDFDXgQ==
 
 acorn@^8.9.0:
-  version "8.11.2"
-  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.11.2.tgz#ca0d78b51895be5390a5903c5b3bdcdaf78ae40b"
-  integrity sha512-nc0Axzp/0FILLEVsm4fNwLCwMttvhEI263QtVPQcbpfZZ3ts0hLsZGOpE6czNlid7CJ9MlyH8reXkpsf3YUY4w==
+  version "8.11.3"
+  resolved "https://registry.yarnpkg.com/acorn/-/acorn-8.11.3.tgz#71e0b14e13a4ec160724b38fb7b0f233b1b81d7a"
+  integrity sha512-Y9rRfJG5jcKOE0CLisYbojUjIrIEE7AGMzA/Sm4BslANhbS+cDMpgBdcPT91oJ7OuJ9hYJBx59RjbhxVnrF8Xg==
 
 adm-zip@^0.5.9:
   version "0.5.10"
@@ -1136,14 +1131,18 @@ tslib@^2.6.2:
   version "2.0.2"
   resolved "git+https://git@github.com/thinknathan/tstl-const-propagation.git#4106dd4bef5002e752ca561906348977f755a0d2"
 
+"tstl-export-to-global@git+https://git@github.com/thinknathan/tstl-export-to-global.git#^1.0.0":
+  version "1.0.0"
+  resolved "git+https://git@github.com/thinknathan/tstl-export-to-global.git#351baac241b273e11d715cd4e0f2c9f340e9f846"
+
 "tstl-simple-inline-func@git+https://git@github.com/thinknathan/tstl-simple-inline-func.git#^1.0.0":
   version "1.0.0"
   resolved "git+https://git@github.com/thinknathan/tstl-simple-inline-func.git#664ceadfcf1eb741a8f20d9eac0b73297b33f7e1"
 
 tstl-trim-extensions@^1.0.3:
-  version "1.0.3"
-  resolved "https://registry.yarnpkg.com/tstl-trim-extensions/-/tstl-trim-extensions-1.0.3.tgz#d17c9a9904766532e695e5b9b4f1321c13c0711e"
-  integrity sha512-P9jmoAdEpGK5vZ73yI3GxgaMgVzkTPbosyHh3q7nT0K0U86x9DUlQoB4Gb6fI+MsuGDfTndel0Jf8IUCK2aMvg==
+  version "1.0.4"
+  resolved "https://registry.yarnpkg.com/tstl-trim-extensions/-/tstl-trim-extensions-1.0.4.tgz#e69fa6e26fb1e4b6520c4b38d101cdf3960e2a82"
+  integrity sha512-z72H57fPzzTMAjWbCTH/R3LjrT9iJUaPMqPY+sAts7i/oIR6SpptWGa8VK6t9NpKNvRku1SKbDW5/NNcoN5+Qw==
 
 type-check@^0.4.0, type-check@~0.4.0:
   version "0.4.0"

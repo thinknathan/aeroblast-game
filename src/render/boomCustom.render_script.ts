@@ -2,11 +2,10 @@
 
 /**
  * Render Script.
- * Modified from @britzl's `boom` script.
- * Intended to be more optimized, but not yet profiled.
+ * Modified from @britzl's boom script with (attempted) optimizations.
  */
 
-type renderScript = {
+type RenderScript = {
 	tile_pred: predicate;
 	screen_pred: predicate;
 	clear_color: vmath.vector4;
@@ -22,7 +21,7 @@ type renderScript = {
 	};
 };
 
-export type setViewProjectionMessage = {
+export type SetViewProjectionMessage = {
 	view: vmath.matrix4;
 	projection: vmath.matrix4;
 };
@@ -30,7 +29,7 @@ export type setViewProjectionMessage = {
 const CLEAR_COLOR_HASH = hash('clear_color');
 const SET_VIEW_PROJ_HASH = hash('set_view_projection');
 
-export function init(this: renderScript) {
+export const init: ScriptInit<RenderScript> = function (this: RenderScript) {
 	this.tile_pred = render.predicate(['tile']);
 	this.screen_pred = render.predicate(['screen']);
 
@@ -52,9 +51,12 @@ export function init(this: renderScript) {
 		[render.BUFFER_DEPTH_BIT]: 1,
 		[render.BUFFER_STENCIL_BIT]: 0,
 	};
-}
+};
 
-export function update(this: renderScript) {
+export const update: ScriptUpdate<RenderScript> = function (
+	this: RenderScript,
+	_dt: number,
+) {
 	this.window_width = render.get_window_width();
 	this.window_height = render.get_window_height();
 	if (this.window_width === 0 || this.window_height === 0) {
@@ -115,17 +117,33 @@ export function update(this: renderScript) {
 	render.disable_state(render.STATE_CULL_FACE);
 	this.frustum_table.frustum = vmath.mul(proj_screen, view_screen);
 	render.draw(this.screen_pred, this.frustum_table);
-}
+};
 
-export function on_message(
-	this: renderScript,
+/** @inlineStart @removeReturn */
+const testColorHash = (
 	message_id: hash,
-	message: render.clear_color_message | setViewProjectionMessage,
+	message: unknown,
+): message is render.clear_color_message => {
+	return message_id === CLEAR_COLOR_HASH;
+};
+/** @inlineEnd @inlineStart @removeReturn */
+const testClearColourHash = (
+	message_id: hash,
+	message: unknown,
+): message is SetViewProjectionMessage => {
+	return message_id === SET_VIEW_PROJ_HASH;
+};
+/** @inlineEnd */
+
+export const on_message: ScriptOnMessage<RenderScript> = function (
+	this: RenderScript,
+	message_id: hash,
+	message: render.clear_color_message | SetViewProjectionMessage,
 ) {
-	if (message_id === CLEAR_COLOR_HASH) {
-		this.clear_color = (message as render.clear_color_message).color;
-	} else if (message_id === SET_VIEW_PROJ_HASH) {
-		this.view = (message as setViewProjectionMessage).view;
-		this.projection = (message as setViewProjectionMessage).projection;
+	if (testColorHash(message_id, message)) {
+		this.clear_color = message.color;
+	} else if (testClearColourHash(message_id, message)) {
+		this.view = message.view;
+		this.projection = message.projection;
 	}
-}
+};

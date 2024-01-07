@@ -68,7 +68,6 @@ const playAudio = function (
 				}
 				currentBgm = soundId;
 				soundTable.gain = (state.options.get('musicVolume')! / HUNDO) * gain;
-				print(soundTable.gain);
 				print('Starting playing', currentBgm);
 				defSoundPlay(soundUrls.get(soundId)!, soundTable);
 			} else {
@@ -97,7 +96,9 @@ const playAudio = function (
 	}
 };
 
-export function init(this: AudioController) {
+export const init: ScriptInit<AudioController> = function (
+	this: AudioController,
+) {
 	// BGM
 	soundUrls.set('bgm_gameover', msg.url('/audio_controller#bgm_gameover'));
 	soundUrls.set('bgm_gameplay', msg.url('/audio_controller#bgm_gameplay'));
@@ -131,9 +132,12 @@ export function init(this: AudioController) {
 	soundUrls.set('sfx_pickup3', msg.url('/audio_controller#sfx_pickup3'));
 	soundUrls.set('sfx_pickup4', msg.url('/audio_controller#sfx_pickup4'));
 	soundUrls.set('sfx_pickup5', msg.url('/audio_controller#sfx_pickup5'));
-}
+};
 
-export function update(this: AudioController, dt: number): void {
+export const update: ScriptUpdate<AudioController> = function (
+	this: AudioController,
+	dt: number,
+): void {
 	// Count down the stored timers
 	for (const [key] of activeSounds) {
 		activeSounds.set(key, activeSounds.get(key)! - dt);
@@ -141,7 +145,7 @@ export function update(this: AudioController, dt: number): void {
 			activeSounds.delete(key);
 		}
 	}
-}
+};
 
 /** @inlineStart @removeReturn */
 const testSfxMessage = (
@@ -159,11 +163,11 @@ const testBgmMessage = (
 };
 /** @inlineEnd */
 
-export function on_message(
+export const on_message: ScriptOnMessage<AudioController> = function (
 	this: AudioController,
 	message_id: hash,
 	message: unknown,
-	_sender: void,
+	_sender: url,
 ): void {
 	if (testSfxMessage(message_id, message)) {
 		playAudio(
@@ -194,4 +198,4 @@ export function on_message(
 			defSoundPlay(soundUrls.get(currentBgm)!, soundTable);
 		}
 	}
-}
+};

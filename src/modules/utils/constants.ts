@@ -1,5 +1,6 @@
 /** @noSelfInFile **/
-/* eslint-disable @typescript-eslint/no-magic-numbers */
+
+// eslint @typescript-eslint/no-magic-numbers: 0
 
 /**
  * Contants Utility.

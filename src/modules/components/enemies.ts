@@ -8,29 +8,37 @@
 import * as utils from '../utils';
 import * as state from '../state';
 
+const entities: LuaSet<EnemyType> = new LuaSet();
+
 const ENEMY_TAG = 'enemy';
 const ENEMY_ALIVE_TAG = 'enemy-active';
 const ENEMY_DEAD_TAG = 'enemy-inactive';
 
 // By default, there's a max of 128 sprites and physics objects in the engine.
-// We've increased the sprite limit, but we're still trying to keep within a relatively small limit.
+// You can increase the limit, but for this project we'll try to stay under 128 total objects.
 const MAX_ENEMIES = 80;
 
-// New enemies spawn this often, in seconds
-const SPAWN_INTERVAL = 10;
+// Chance to spawn enemies this often, in seconds
+const SPAWN_INTERVAL = 1;
 
 // The coordinates the enemies will be stored when inactive
-const INACTIVE_X1 = -500;
-const INACTIVE_X2 = -1000;
-const INACTIVE_Y1 = -500;
-const INACTIVE_Y2 = -1000;
+const INACTIVE_X1 = -750;
+const INACTIVE_Y1 = -750;
 
 // Duration of the visual effect when hit by bullets
 const HURT_VFX_DURATION = 0.33;
 
+// Enemies will be at least this fast
+const ENEMY_SPEED_BASE = 1800;
+
+// We want the game to get harder over time
+// so this value will be multiplied by the difficulty
+// to gradually give you faster enemies
+const ENEMY_SPEED_MULTIPLIER = 150;
+
 const OFFSCREEN_PADDING = 16;
 
-const FIRST_SPAWN_DELAY = 0.017;
+const FIRST_SPAWN_DELAY = 0.5;
 
 const getPosition = (pick: number) => {
 	if (pick === 1)
@@ -90,33 +98,120 @@ const audioRandomize = () => {
 };
 /** @inlineEnd */
 
-const activateFn = (obj: EnemyType) => {
-	if (obj.area_url !== undefined) {
-		physics.set_group(obj.area_url, 'enemy');
-		physics.set_maskbit(obj.area_url, 'player', true);
-	} else {
-		print('enemies.ts Error: No area_url in enemy');
-	}
+const playerGroup = hash('player');
+const enemyGroup = hash('enemy');
+const itemGroup = hash('item');
+const bulletGroup = hash('bullet');
+const FRAME = 0.03;
+const RANDOM_HARDER_ENEMY_THRESHOLD = 0.96;
+// const RANDOM_CHAMPION_ENEMY_THRESHOLD = 0.98;
 
-	obj.use(ENEMY_ALIVE_TAG);
-	obj.unuse(ENEMY_DEAD_TAG);
+/** @inlineStart */
+function setPhysicsGroup(enemyObj: EnemyType) {
+	physics.set_group(enemyObj.area_url!, enemyGroup);
+	physics.set_maskbit(enemyObj.area_url!, playerGroup, true);
+	physics.set_maskbit(enemyObj.area_url!, enemyGroup, false);
+	physics.set_maskbit(enemyObj.area_url!, itemGroup, false);
+	physics.set_maskbit(enemyObj.area_url!, bulletGroup, true);
+}
+/** @inlineEnd */
+
+// Spawn at least this many enemies each wave
+const ENEMY_SPAWN_MINIMUM = 7;
+
+let enemySpawnCounter = 9;
+const ENEMY_BASE_SPAWN_RATE = 11;
+
+const spawnEnemies = () => {
+	if (state.game.player.isAlive === false) {
+		return;
+	}
+	// Increment counter
+	enemySpawnCounter++;
+
+	// Only spawn enemies if the counter reaches target value
+	// Enemies arrive more quickly at higher difficulties
+	if (enemySpawnCounter >= ENEMY_BASE_SPAWN_RATE - state.game.difficulty) {
+		// Increase enemy wave size based on difficulty
+		const target = state.game.difficulty + ENEMY_SPAWN_MINIMUM;
+		let activated = 0;
+		for (const obj of entities) {
+			if (obj.is(ENEMY_DEAD_TAG)) {
+				activateFn(obj);
+				activated++;
+				// Reset counter
+				enemySpawnCounter = 0;
+				if (activated >= target) return;
+			}
+		}
+	}
+};
+
+const getSprite = (difficulty: number) => {
+	if (difficulty === 1) {
+		return 'enemy01';
+		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
+	} else if (difficulty === 2) {
+		return 'enemy02';
+		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
+	} else if (difficulty === 3) {
+		return 'enemy03';
+		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
+	} else if (difficulty === 4) {
+		return 'enemy04';
+		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
+	} else if (difficulty === 5) {
+		return 'enemy05';
+	}
+	print('enemies.ts error: Difficulty is higher than expected (>= 6)');
+	return 'enemy01';
+};
+
+const ENEMY_HP_BASE = 1;
+const ENEMY_HP_MULTIPLIER = 2;
+const CHAMPION_HP_MULTIPLIER = 3;
+
+const getHp = (effectiveDifficulty: number, champion?: boolean) =>
+	champion === true
+		? ENEMY_HP_BASE +
+			ENEMY_HP_MULTIPLIER * CHAMPION_HP_MULTIPLIER * effectiveDifficulty
+		: ENEMY_HP_BASE + ENEMY_HP_MULTIPLIER * effectiveDifficulty;
+
+/** @inlineStart @removeReturn */
+const getSpeed = (effectiveDifficulty: number) =>
+	ENEMY_SPEED_BASE + ENEMY_SPEED_MULTIPLIER * effectiveDifficulty;
+/** @inlineEnd */
+
+const activateFn = (enemyObj: EnemyType) => {
+	enemyObj.use(ENEMY_ALIVE_TAG);
+	enemyObj.unuse(ENEMY_DEAD_TAG);
 	// eslint-disable-next-line @typescript-eslint/no-magic-numbers
 	const [x, y] = getPosition(randi(0, 3));
-	obj.opacity = 1;
-	obj.pos.x = x;
-	obj.pos.y = y;
+	enemyObj.opacity = 1;
+	enemyObj.pos.x = x;
+	enemyObj.pos.y = y;
 
-	obj.play(getSprite());
+	let effectiveDifficulty = state.game.difficulty;
 
-	if (obj.hurtTween) {
-		obj.hurtTween.cancel();
+	if (Math.random() >= RANDOM_HARDER_ENEMY_THRESHOLD) {
+		// Small chance to spawn a more difficult than expected enemy
+		effectiveDifficulty++;
+		// Make sure it's less than max difficulty
+		if (effectiveDifficulty > state.game.difficultyMax) {
+			effectiveDifficulty = state.game.difficultyMax;
+		}
 	}
-	obj.color.r = 1;
-	obj.color.g = 1;
-	obj.color.b = 1;
-	obj.hp = getHp();
-	obj.moveSpeed = getSpeed();
-	obj.scale_to(1);
+
+	enemyObj.play(getSprite(effectiveDifficulty));
+
+	if (enemyObj.hurtTween) {
+		enemyObj.hurtTween.cancel();
+	}
+	enemyObj.color.r = 1;
+	enemyObj.color.g = 1;
+	enemyObj.color.b = 1;
+	enemyObj.hp = getHp(effectiveDifficulty);
+	enemyObj.moveSpeed = getSpeed(effectiveDifficulty);
 };
 
 const SCORE_BASE = 1;
@@ -126,8 +221,8 @@ const deactivateFn = (obj: EnemyType) => {
 	obj.unuse(ENEMY_ALIVE_TAG);
 	obj.use(ENEMY_DEAD_TAG);
 	obj.opacity = 0;
-	obj.pos.x = randi(INACTIVE_X1, INACTIVE_X2);
-	obj.pos.y = randi(INACTIVE_Y1, INACTIVE_Y2);
+	obj.pos.x = INACTIVE_X1;
+	obj.pos.y = INACTIVE_Y1;
 	obj.moveSpeed = 0;
 };
 
@@ -165,7 +260,7 @@ const hurtEffect = (obj: EnemyType) => {
 };
 
 type EnemyType = BoomGameObject<
-	[SpriteComp, PosComp, AreaComp, ColorComp, OpacityComp, ScaleComp, HealthComp]
+	[SpriteComp, PosComp, AreaComp, ColorComp, OpacityComp, HealthComp, TimerComp]
 > & {
 	moveSpeed: number;
 	hurtTween?: Tween;
@@ -179,19 +274,18 @@ const initFn = () => {
 
 	// Declare some info outside of the loop
 	const atlasContent = { atlas: utils.constants.ATLAS } as const;
-	const areaContent = { shape: 'auto' } as const;
+	const areaContent = { width: 20, height: 20, shape: 'rect' } as const;
 
 	// Fill up a pool with inactive enemies
 	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	for (const _ of $range(1, MAX_ENEMIES)) {
 		const enemyObj = add([
-			sprite(getSprite(), atlasContent),
-			pos(randi(INACTIVE_X1, INACTIVE_X2), randi(INACTIVE_Y1, INACTIVE_Y2)),
+			sprite(getSprite(1), atlasContent),
+			pos(INACTIVE_X1, INACTIVE_Y1),
 			area(areaContent),
 			color(1, 1, 1, 1),
 			opacity(0),
 			health(1),
-			scale(1),
 			ENEMY_TAG,
 			ENEMY_DEAD_TAG,
 		]) as EnemyType;
@@ -201,16 +295,33 @@ const initFn = () => {
 		enemyObj.on_death(() => {
 			deactivateFn(enemyObj);
 		});
+		enemyObj.add([
+			timer(FRAME, () => {
+				// Set physics group so objects don't collide with others of the same type
+				if (enemyObj.area_url !== undefined) {
+					setPhysicsGroup(enemyObj);
+				} else {
+					print('enemies.ts Error: No area_url in enemy');
+					// Fallback: try again in a second
+					timer(1, () => {
+						// Set physics group so objects don't collide with others of the same type
+						if (enemyObj.area_url !== undefined) {
+							setPhysicsGroup(enemyObj);
+						}
+					});
+				}
+			}),
+		]);
 		entities.add(enemyObj);
-		enemyObj.moveSpeed = getSpeed();
+		enemyObj.moveSpeed = 0;
 		enemyObj.on_collide('bullet-active', () => {
 			enemyObj.hurt(state.game.player.attackPower);
 		});
 	}
-	// On a regular interval, activate 10 enemies
-	const loopMinute = add([timer(SPAWN_INTERVAL, spawnEnemies)]);
-	loopMinute.loop(SPAWN_INTERVAL, spawnEnemies);
-	// Spawn once, on the next frame
+	// On a regular interval, spawn enemies
+	const spawnLoop = add([timer(SPAWN_INTERVAL, spawnEnemies)]);
+	spawnLoop.loop(SPAWN_INTERVAL, spawnEnemies);
+	// Spawn once when the game begins
 	add([timer(FIRST_SPAWN_DELAY, spawnEnemies)]);
 
 	let x = 0;
@@ -269,63 +380,6 @@ const initFn = () => {
 		);
 	});
 };
-
-const spawnEnemies = () => {
-	if (state.game.player.isAlive === false) {
-		return;
-	}
-	const target = 10;
-	let activated = 0;
-	for (const obj of entities) {
-		if (obj.is(ENEMY_DEAD_TAG)) {
-			activateFn(obj);
-			activated++;
-			if (activated >= target) return;
-		}
-	}
-};
-
-const getSprite = () => {
-	if (state.game.difficulty === 1) {
-		return 'enemy01';
-		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
-	} else if (state.game.difficulty === 2) {
-		return 'enemy02';
-		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
-	} else if (state.game.difficulty === 3) {
-		return 'enemy03';
-		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
-	} else if (state.game.difficulty === 4) {
-		return 'enemy04';
-		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
-	} else if (state.game.difficulty === 5) {
-		return 'enemy05';
-	}
-	print('enemies.ts error: Difficulty is higher than expected (>= 6)');
-	return 'enemy01';
-};
-
-const ENEMY_HP_BASE = 1;
-const ENEMY_HP_MULTIPLIER = 2;
-
-/** @inlineStart @removeReturn */
-const getHp = () => ENEMY_HP_BASE + ENEMY_HP_MULTIPLIER * state.game.difficulty;
-/** @inlineEnd */
-
-// Enemies will be at least this fast
-const ENEMY_SPEED_BASE = 1800;
-
-// We want the game to get harder over time
-// so this value will be multiplied by the difficulty
-// to gradually give you faster enemies
-const ENEMY_SPEED_MULTIPLIER = 150;
-
-/** @inlineStart @removeReturn */
-const getSpeed = () =>
-	ENEMY_SPEED_BASE + ENEMY_SPEED_MULTIPLIER * state.game.difficulty;
-/** @inlineEnd */
-
-const entities: LuaSet<EnemyType> = new LuaSet();
 
 interface Enemies {
 	activate: (this: void, obj: EnemyType) => void;

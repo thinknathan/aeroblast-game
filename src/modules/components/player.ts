@@ -10,6 +10,8 @@ import * as state from '../state';
 import { bullets } from './bullets';
 import { type ItemType, items } from './items';
 
+let entity: PlayerType | undefined = undefined;
+
 const PLAYER_INITIAL_HP = 50;
 const PLAYER_MAX_HP = 100;
 
@@ -167,6 +169,22 @@ const healEffect = (obj: PlayerType) => {
 	);
 };
 
+const playerGroup = hash('player');
+const enemyGroup = hash('enemy');
+const itemGroup = hash('item');
+const bulletGroup = hash('bullet');
+const FRAME = 0.03;
+
+/** @inlineStart */
+function setPhysicsGroup(playerObj: PlayerType) {
+	physics.set_group(playerObj.area_url!, playerGroup);
+	physics.set_maskbit(playerObj.area_url!, enemyGroup, true);
+	physics.set_maskbit(playerObj.area_url!, playerGroup, false);
+	physics.set_maskbit(playerObj.area_url!, bulletGroup, false);
+	physics.set_maskbit(playerObj.area_url!, itemGroup, true);
+}
+/** @inlineEnd */
+
 // The player is a combination of a game object and many components
 type PlayerType = BoomGameObject<
 	[
@@ -179,6 +197,7 @@ type PlayerType = BoomGameObject<
 		HealthComp,
 		ColorComp,
 		ScaleComp,
+		TimerComp,
 	]
 > & {
 	hurtTween?: Tween;
@@ -213,6 +232,24 @@ const initFn = () => {
 		PLAYER_ALIVE_TAG,
 	]) as PlayerType;
 
+	playerObj.add([
+		timer(FRAME, () => {
+			// Set physics group to collide with the correct objects
+			if (playerObj.area_url !== undefined) {
+				setPhysicsGroup(playerObj);
+			} else {
+				print('player.ts Error: No area_url in player');
+				// Fallback: try again in a second
+				timer(1, () => {
+					// Set physics group to collide with the correct objects
+					if (playerObj.area_url !== undefined) {
+						setPhysicsGroup(playerObj);
+					}
+				});
+			}
+		}),
+	]);
+
 	playerObj.on_hurt(() => {
 		if (state.game.player.isAlive === false) {
 			return;
@@ -233,7 +270,7 @@ const initFn = () => {
 
 	playerObj.on_collide('enemy-active', () => {
 		if (state.game.player.isVulnerable === true) {
-			playerObj.hurt(1);
+			playerObj.hurt(1); // To-do change based on strength of enemy
 		}
 	});
 
@@ -245,10 +282,24 @@ const initFn = () => {
 
 	const POWER_UP_TEXT_FADE_DURATION = 2;
 
+	let vanishTween: Tween | undefined = undefined;
+
 	const hidePowerupText = () => {
-		tween(1, 0, POWER_UP_TEXT_FADE_DURATION, undefined, (opacity) => {
-			if (playerObj.powerupText === undefined) return;
-			playerObj.powerupText.opacity = opacity;
+		if (vanishTween !== undefined) {
+			vanishTween.cancel();
+		}
+		vanishTween = tween(
+			1,
+			0,
+			POWER_UP_TEXT_FADE_DURATION,
+			undefined,
+			(opacity) => {
+				if (playerObj.powerupText === undefined) return;
+				playerObj.powerupText.opacity = opacity;
+			},
+		);
+		vanishTween.on_end(() => {
+			vanishTween = undefined;
 		});
 	};
 	const showPowerupText = (textString: string) => {
@@ -334,29 +385,15 @@ const initFn = () => {
 	let currentAngle = 0;
 	let targetAngle = 0;
 	const smoothingFactor = 20;
-	let firstFrame = true;
 	let fireTimer = 0;
-	let physicsChangeDone = false;
 
 	// Run movement every frame
 	on_update(PLAYER_ALIVE_TAG, (_, cancel) => {
-		if (physicsChangeDone === false && firstFrame === false) {
-			physicsChangeDone = true;
-			if (playerObj.area_url !== undefined) {
-				physics.set_group(playerObj.area_url, 'player');
-				physics.set_maskbit(playerObj.area_url, 'enemy', true);
-			} else {
-				print('player.ts Error: No area_url in player');
-			}
-		}
-
 		if (state.game.player.isAlive === false) {
 			playerObj.move(0, 0);
 			cancel();
 			return;
 		}
-
-		firstFrame = false;
 
 		x = input.x; // eslint-disable-line @typescript-eslint/prefer-destructuring
 		y = input.y; // eslint-disable-line @typescript-eslint/prefer-destructuring
@@ -433,8 +470,6 @@ const initFn = () => {
 interface Player {
 	init: (this: void) => void;
 }
-
-let entity: PlayerType | undefined = undefined;
 
 export const player: Player = {
 	/**

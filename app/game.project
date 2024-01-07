@@ -15,6 +15,7 @@ input_method = HiddenInputField
 
 [project]
 title = Aeroblast
+version = 1.0.1
 dependencies#0 = https://github.com/britzl/boom/archive/refs/heads/main.zip
 dependencies#1 = https://github.com/thejustinwalsh/defold-xmath/archive/refs/heads/main.zip
 
@@ -28,21 +29,50 @@ default_texture_mag_filter = nearest
 
 [physics]
 use_fixed_timestep = 1
+world_count = 1
+ray_cast_limit_3d = 0
+allow_dynamic_transforms = 0
+max_collisions = 100
 
 [engine]
-fixed_update_frequency = 30
+fixed_update_frequency = 40
 
 [html5]
 wasm_streaming = 1
 htmlfile = /web/engine_template.html
+scale_mode = stretch
 
 [sprite]
 subpixels = 0
-max_count = 512
+max_count = 500
 
 [label]
 subpixels = 0
 
 [native_extension]
 app_manifest = /appmanifest.appmanifest
+
+[particle_fx]
+max_count = 0
+max_emitter_count = 0
+max_particle_count = 0
+
+[tilemap]
+max_count = 0
+max_tile_count = 0
+
+[model]
+max_count = 0
+
+[mesh]
+max_count = 0
+
+[gui]
+max_particlefx_count = 0
+max_particle_count = 0
+max_count = 0
+max_animation_count = 0
+
+[collection]
+max_instances = 1200
 
