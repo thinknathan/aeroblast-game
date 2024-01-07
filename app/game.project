@@ -40,7 +40,6 @@ fixed_update_frequency = 40
 [html5]
 wasm_streaming = 1
 htmlfile = /web/engine_template.html
-scale_mode = stretch
 
 [sprite]
 subpixels = 0
