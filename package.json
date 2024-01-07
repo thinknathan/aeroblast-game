@@ -1,6 +1,6 @@
 {
 	"name": "aeroblast-game",
-	"version": "1.0.0",
+	"version": "1.0.1",
 	"description": "Auto-shooter Defold game based on Boom and built with TypeScriptToLua",
 	"author": "Nathan Bolton (https://thinknathan.ca)",
 	"license": "(GPL-3.0 OR MPL-2.0)",
