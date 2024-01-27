@@ -2,6 +2,8 @@
 
 # Aeroblast
 
+[![CI](https://github.com/thinknathan/aeroblast-game/actions/workflows/ci.yml/badge.svg)](https://github.com/thinknathan/aeroblast-game/actions/workflows/ci.yml)
+
 Aeroblast is a simple but addictive top-down auto-shooter. Move using the cursor keys or WASD. Aim at enemies - your character will automatically shoot. Collect power-ups to gain a faster fire rate, restore health, and more. Win by surviving the full ten minute play time.
 
 [Play on Itch.](https://thinknate.itch.io/aeroblast)
