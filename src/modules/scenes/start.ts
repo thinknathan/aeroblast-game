@@ -1,4 +1,4 @@
-/* Copyright (c) Nathan Bolton (GPL-3.0 OR MPL-2.0) | https://github.com/thinknathan/aeroblast-game */
+/* Copyright (c) Nathan Bolton (AGPL-3.0-or-later) | https://github.com/thinknathan/aeroblast-game */
 /** @noSelfInFile **/
 
 /**
@@ -95,7 +95,7 @@ export const start = () => {
 		on_key_press('key_o', goToOptions);
 
 		// Check if we're an HTML5 build or not
-		const systemInfo = sys.get_sys_info() as { system_name: string };
+		const systemInfo = sys.get_sys_info() satisfies { system_name: string };
 		if (systemInfo.system_name !== 'HTML5') {
 			// Add exit text
 			const exit = add([

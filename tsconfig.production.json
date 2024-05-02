@@ -14,6 +14,11 @@
 				"name": "tstl-export-to-global"
 			},
 			{
+				"match": ".*.lua$",
+				"exportRename": "M",
+				"name": "tstl-export-rename"
+			},
+			{
 				"name": "tstl-trim-extensions"
 			},
 			{
@@ -21,6 +26,9 @@
 			},
 			{
 				"name": "tstl-simple-inline-func"
+			},
+			{
+				"name": "tstl-remove-debug"
 			}
 		],
 		"sourceMapTraceback": false

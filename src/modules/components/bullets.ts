@@ -1,4 +1,4 @@
-/* Copyright (c) Nathan Bolton (GPL-3.0 OR MPL-2.0) | https://github.com/thinknathan/aeroblast-game */
+/* Copyright (c) Nathan Bolton (AGPL-3.0-or-later) | https://github.com/thinknathan/aeroblast-game */
 /** @noSelfInFile **/
 
 /**
@@ -110,7 +110,6 @@ const initFn = () => {
 	};
 
 	// Time to loop and create a bunch of objects
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	for (const _ of $range(1, MAX_BULLETS)) {
 		const timerObj = timer(SHOT_DURATION, () => {
 			deactivateFn(bullet);
@@ -230,21 +229,7 @@ const fireBulletFn = (
 	}
 };
 
-interface Bullets {
-	activate: (
-		this: void,
-		x: number,
-		y: number,
-		rotation: number,
-		dirX: number,
-		dirY: number,
-	) => void;
-	deactivate: (this: void, obj: BulletType) => void;
-	init: (this: void) => void;
-}
-
-export const bullets: Bullets = {
+export const bullets = {
 	activate: fireBulletFn,
-	deactivate: deactivateFn,
 	init: initFn,
 } as const;

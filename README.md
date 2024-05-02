@@ -21,18 +21,10 @@ Aeroblast is a simple but addictive top-down auto-shooter. Move using the cursor
 3. `yarn build` to build lua files from source
 4. Use Defold to package the game
 
-## License
-
-You may choose to use this software under either of the following licenses, at your option:
-
-- [GNU General Public License Version 3.0](LICENSE), or any later version
-- [Mozilla Public License 2.0](LICENSE-MPL-2.0)
-
-If you would like to redistribute the game with your own changes, please do not use the Aeroblast name or title screen `title3.png`.
-
 ## Thanks
 
 - [tsd-template](https://github.com/ts-defold/tsd-template) (Copyright (c) Justin Walsh (@thejustinwalsh)).
 - [xmath](https://github.com/thejustinwalsh/defold-xmath) (Copyright (c) Justin Walsh (@thejustinwalsh)).
 - [boom](https://github.com/britzl/boom) (Copyright (c) 2023 Björn Ritzl).
 - [Kenney](https://kenney.nl/assets)
+- [extension-prometheus](https://github.com/defold/extension-prometheus)

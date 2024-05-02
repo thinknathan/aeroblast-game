@@ -15,9 +15,10 @@ input_method = HiddenInputField
 
 [project]
 title = Aeroblast
-version = 1.0.1
+version = 1.0.2
 dependencies#0 = https://github.com/britzl/boom/archive/refs/heads/main.zip
 dependencies#1 = https://github.com/thejustinwalsh/defold-xmath/archive/refs/heads/main.zip
+dependencies#2 = https://github.com/defold/extension-prometheus/archive/refs/tags/2.0.1.zip
 
 [input]
 game_binding = /boom/boom.input_bindingc
@@ -39,7 +40,6 @@ fixed_update_frequency = 40
 
 [html5]
 wasm_streaming = 1
-htmlfile = /web/engine_template.html
 
 [sprite]
 subpixels = 0

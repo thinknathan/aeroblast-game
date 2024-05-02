@@ -1,4 +1,4 @@
-/* Copyright (c) Nathan Bolton (GPL-3.0 OR MPL-2.0) | https://github.com/thinknathan/aeroblast-game */
+/* Copyright (c) Nathan Bolton (AGPL-3.0-or-later) | https://github.com/thinknathan/aeroblast-game */
 /** @noSelfInFile **/
 
 /**
@@ -58,14 +58,14 @@ const atlasContent = { atlas: utils.constants.ATLAS } as const;
 
 const initFn = () => {
 	const map = generateStringArray(COLUMNS, ROWS, SYMBOL_LIST, SYMBOL_PROB);
-	const tiles: BoomTiles = {
+	const tiles = {
 		'!': () => [anchor('topleft'), z(-1), sprite('cluster01', atlasContent)],
 		'@': () => [anchor('topleft'), z(-1), sprite('cluster02', atlasContent)],
 		'#': () => [anchor('topleft'), z(-1), sprite('cluster03', atlasContent)],
 		'%': () => [anchor('topleft'), z(-1), sprite('cluster04', atlasContent)],
 		'^': () => [anchor('topleft'), z(-1), sprite('cluster05', atlasContent)],
 		'&': () => [anchor('topleft'), z(-1), sprite('cluster06', atlasContent)],
-	};
+	} as const satisfies BoomTiles;
 	add_level(map, {
 		tile_width: TILE_WIDTH,
 		tile_height: TILE_HEIGHT,

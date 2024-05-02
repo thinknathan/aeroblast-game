@@ -1,4 +1,4 @@
-/* Copyright (c) Nathan Bolton (GPL-3.0 OR MPL-2.0) | https://github.com/thinknathan/aeroblast-game */
+/* Copyright (c) Nathan Bolton (AGPL-3.0-or-later) | https://github.com/thinknathan/aeroblast-game */
 /** @noSelfInFile **/
 
 /**
@@ -9,11 +9,7 @@
 import * as utils from '../utils';
 import * as state from '../state';
 
-const entities: LuaSet<EnemyType> = new LuaSet();
-
-const ENEMY_TAG = 'enemy';
 const ENEMY_ALIVE_TAG = 'enemy-active';
-const ENEMY_DEAD_TAG = 'enemy-inactive';
 
 // By default, there's a max of 128 sprites and physics objects in the engine.
 // You can increase the limit, but for this project we'll try to stay under 128 total objects.
@@ -123,10 +119,11 @@ const ENEMY_SPAWN_MINIMUM = 7;
 let enemySpawnCounter = 9;
 const ENEMY_BASE_SPAWN_RATE = 11;
 
-const spawnEnemies = () => {
+const spawnEnemies = (pool: { activateItem: () => unknown }) => {
 	if (state.game.player.isAlive === false) {
 		return;
 	}
+
 	// Increment counter
 	enemySpawnCounter++;
 
@@ -135,16 +132,12 @@ const spawnEnemies = () => {
 	if (enemySpawnCounter >= ENEMY_BASE_SPAWN_RATE - state.game.difficulty) {
 		// Increase enemy wave size based on difficulty
 		const target = state.game.difficulty + ENEMY_SPAWN_MINIMUM;
-		let activated = 0;
-		for (const obj of entities) {
-			if (obj.is(ENEMY_DEAD_TAG)) {
-				activateFn(obj);
-				activated++;
-				// Reset counter
-				enemySpawnCounter = 0;
-				if (activated >= target) return;
-			}
+
+		for (const _ of $range(1, target)) {
+			pool.activateItem();
 		}
+		// Reset counter
+		enemySpawnCounter = 0;
 	}
 };
 
@@ -185,7 +178,6 @@ const getSpeed = (effectiveDifficulty: number) =>
 
 const activateFn = (enemyObj: EnemyType) => {
 	enemyObj.use(ENEMY_ALIVE_TAG);
-	enemyObj.unuse(ENEMY_DEAD_TAG);
 	// eslint-disable-next-line @typescript-eslint/no-magic-numbers
 	const [x, y] = getPosition(randi(0, 3));
 	enemyObj.opacity = 1;
@@ -194,6 +186,13 @@ const activateFn = (enemyObj: EnemyType) => {
 
 	let effectiveDifficulty = state.game.difficulty;
 
+	// To-do: finish champion system
+	// let champion = false;
+
+	// Small chance to spawn a champion enemy
+	// if (Math.random() >= RANDOM_CHAMPION_ENEMY_THRESHOLD) {
+	// champion = true;
+	// } else if (Math.random() >= RANDOM_HARDER_ENEMY_THRESHOLD) {
 	if (Math.random() >= RANDOM_HARDER_ENEMY_THRESHOLD) {
 		// Small chance to spawn a more difficult than expected enemy
 		effectiveDifficulty++;
@@ -220,7 +219,6 @@ const SCORE_BASE = 1;
 const deactivateFn = (obj: EnemyType) => {
 	state.game.score += SCORE_BASE * state.game.difficulty;
 	obj.unuse(ENEMY_ALIVE_TAG);
-	obj.use(ENEMY_DEAD_TAG);
 	obj.opacity = 0;
 	obj.pos.x = INACTIVE_X1;
 	obj.pos.y = INACTIVE_Y1;
@@ -262,10 +260,12 @@ const hurtEffect = (obj: EnemyType) => {
 
 type EnemyType = BoomGameObject<
 	[SpriteComp, PosComp, AreaComp, ColorComp, OpacityComp, HealthComp, TimerComp]
-> & {
-	moveSpeed: number;
-	hurtTween?: Tween;
-};
+> &
+	IsActivateable &
+	IsDeactivateable & {
+		moveSpeed: number;
+		hurtTween?: Tween;
+	};
 
 const initFn = () => {
 	// Create a URL for the audio controller so we can do audio!
@@ -278,52 +278,59 @@ const initFn = () => {
 	const areaContent = { width: 20, height: 20, shape: 'rect' } as const;
 
 	// Fill up a pool with inactive enemies
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
-	for (const _ of $range(1, MAX_ENEMIES)) {
-		const enemyObj = add([
-			sprite(getSprite(1), atlasContent),
-			pos(INACTIVE_X1, INACTIVE_Y1),
-			area(areaContent),
-			color(1, 1, 1, 1),
-			opacity(0),
-			health(1),
-			ENEMY_TAG,
-			ENEMY_DEAD_TAG,
-		]) as EnemyType;
-		enemyObj.on_hurt(() => {
-			hurtEffect(enemyObj);
-		});
-		enemyObj.on_death(() => {
-			deactivateFn(enemyObj);
-		});
-		enemyObj.add([
-			timer(FRAME, () => {
-				// Set physics group so objects don't collide with others of the same type
-				if (enemyObj.area_url !== undefined) {
-					setPhysicsGroup(enemyObj);
-				} else {
-					print('enemies.ts Error: No area_url in enemy');
-					// Fallback: try again in a second
-					timer(1, () => {
-						// Set physics group so objects don't collide with others of the same type
-						if (enemyObj.area_url !== undefined) {
-							setPhysicsGroup(enemyObj);
-						}
-					});
-				}
-			}),
-		]);
-		entities.add(enemyObj);
-		enemyObj.moveSpeed = 0;
-		enemyObj.on_collide('bullet-active', () => {
-			enemyObj.hurt(state.game.player.attackPower);
-		});
-	}
+	const pool = utils.poolGenerator(
+		() => {
+			const enemyObj = add([
+				sprite(getSprite(1), atlasContent),
+				pos(INACTIVE_X1, INACTIVE_Y1),
+				area(areaContent),
+				color(1, 1, 1, 1),
+				opacity(0),
+				health(1),
+			]) as EnemyType;
+			enemyObj.on_hurt(() => {
+				hurtEffect(enemyObj);
+			});
+			enemyObj.on_death(() => {
+				enemyObj.deactivate();
+			});
+			enemyObj.add([
+				timer(FRAME, () => {
+					// Set physics group so objects don't collide with others of the same type
+					if (enemyObj.area_url !== undefined) {
+						setPhysicsGroup(enemyObj);
+					} else {
+						print('enemies.ts Error: No area_url in enemy');
+						// Fallback: try again in a second
+						timer(1, () => {
+							// Set physics group so objects don't collide with others of the same type
+							if (enemyObj.area_url !== undefined) {
+								setPhysicsGroup(enemyObj);
+							}
+						});
+					}
+				}),
+			]);
+			enemyObj.moveSpeed = 0;
+			enemyObj.on_collide('bullet-active', () => {
+				enemyObj.hurt(state.game.player.attackPower);
+			});
+			return enemyObj;
+		},
+		deactivateFn,
+		activateFn,
+		MAX_ENEMIES,
+	);
+
+	const spawn = () => {
+		spawnEnemies(pool);
+	};
+
 	// On a regular interval, spawn enemies
-	const spawnLoop = add([timer(SPAWN_INTERVAL, spawnEnemies)]);
-	spawnLoop.loop(SPAWN_INTERVAL, spawnEnemies);
+	const spawnLoop = add([timer(SPAWN_INTERVAL, spawn)]);
+	spawnLoop.loop(SPAWN_INTERVAL, spawn);
 	// Spawn once when the game begins
-	add([timer(FIRST_SPAWN_DELAY, spawnEnemies)]);
+	add([timer(FIRST_SPAWN_DELAY, spawn)]);
 
 	let x = 0;
 	let y = 0;
@@ -382,14 +389,6 @@ const initFn = () => {
 	});
 };
 
-interface Enemies {
-	activate: (this: void, obj: EnemyType) => void;
-	deactivate: (this: void, obj: EnemyType) => void;
-	init: (this: void) => void;
-}
-
-export const enemies: Enemies = {
-	activate: activateFn,
-	deactivate: deactivateFn,
+export const enemies = {
 	init: initFn,
 } as const;

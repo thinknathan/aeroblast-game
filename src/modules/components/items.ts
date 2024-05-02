@@ -1,4 +1,4 @@
-/* Copyright (c) Nathan Bolton (GPL-3.0 OR MPL-2.0) | https://github.com/thinknathan/aeroblast-game */
+/* Copyright (c) Nathan Bolton (AGPL-3.0-or-later) | https://github.com/thinknathan/aeroblast-game */
 /** @noSelfInFile **/
 
 /**
@@ -152,7 +152,6 @@ const initFn = () => {
 	const areaContent = { radius: 18, shape: 'circle' } as const;
 
 	// Time to loop and create a bunch of objects
-	// eslint-disable-next-line @typescript-eslint/no-unused-vars
 	for (const _ of $range(1, MAX_ITEMS)) {
 		const item = add([
 			sprite('powerup01', atlasContent),
@@ -192,14 +191,7 @@ const initFn = () => {
 	itemTimer.loop(ITEM_SPAWN_TIMER, spawnItem);
 };
 
-interface Items {
-	activate: (this: void, obj: ItemType) => void;
-	deactivate: (this: void, obj: ItemType) => void;
-	init: (this: void) => void;
-}
-
-export const items: Items = {
-	activate: activateFn,
+export const items = {
 	deactivate: deactivateFn,
 	init: initFn,
 } as const;

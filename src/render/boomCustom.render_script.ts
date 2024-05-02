@@ -1,4 +1,4 @@
-/* Copyright (c) Nathan Bolton (GPL-3.0 OR MPL-2.0) | https://github.com/thinknathan/aeroblast-game */
+/* Copyright (c) Nathan Bolton (AGPL-3.0-or-later) | https://github.com/thinknathan/aeroblast-game */
 /** @noSelfInFile **/
 
 /**
@@ -30,7 +30,7 @@ export type SetViewProjectionMessage = {
 const CLEAR_COLOR_HASH = hash('clear_color');
 const SET_VIEW_PROJ_HASH = hash('set_view_projection');
 
-export const init: ScriptInit<RenderScript> = function (this: RenderScript) {
+export const init: ScriptInit<RenderScript> = function (this) {
 	this.tile_pred = render.predicate(['tile']);
 	this.screen_pred = render.predicate(['screen']);
 
@@ -54,10 +54,7 @@ export const init: ScriptInit<RenderScript> = function (this: RenderScript) {
 	};
 };
 
-export const update: ScriptUpdate<RenderScript> = function (
-	this: RenderScript,
-	_dt: number,
-) {
+export const update: ScriptUpdate<RenderScript> = function (this, _dt) {
 	this.window_width = render.get_window_width();
 	this.window_height = render.get_window_height();
 	if (this.window_width === 0 || this.window_height === 0) {
@@ -137,8 +134,8 @@ const testClearColourHash = (
 /** @inlineEnd */
 
 export const on_message: ScriptOnMessage<RenderScript> = function (
-	this: RenderScript,
-	message_id: hash,
+	this,
+	message_id,
 	message: render.clear_color_message | SetViewProjectionMessage,
 ) {
 	if (testColorHash(message_id, message)) {

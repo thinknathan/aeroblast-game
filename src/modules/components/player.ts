@@ -1,4 +1,4 @@
-/* Copyright (c) Nathan Bolton (GPL-3.0 OR MPL-2.0) | https://github.com/thinknathan/aeroblast-game */
+/* Copyright (c) Nathan Bolton (AGPL-3.0-or-later) | https://github.com/thinknathan/aeroblast-game */
 /** @noSelfInFile **/
 
 /**
@@ -31,7 +31,11 @@ const ANGLE_BOTTOM_LEFT = -225;
 const ANGLE_LEFT = -270;
 const ANGLE_TOP_LEFT = -315;
 
-const input = {
+type inputTable = {
+	x: number;
+	y: number;
+};
+const input: inputTable = {
 	x: 0,
 	y: 0,
 };
@@ -219,7 +223,7 @@ const initFn = () => {
 
 	const playerObj = add([
 		sprite('player', { atlas: utils.constants.ATLAS }),
-		// eslint-disable-next-line @typescript-eslint/no-magic-numbers
+
 		pos(utils.camera.centerX(), utils.camera.centerY()),
 		// Reduce size of collision to be smaller than graphic to make it easier to dodge enemies
 		area({ radius: 5, shape: 'circle' }),
@@ -468,11 +472,7 @@ const initFn = () => {
 	entity = playerObj;
 };
 
-interface Player {
-	init: (this: void) => void;
-}
-
-export const player: Player = {
+export const player = {
 	/**
 	 * Construct the player game object and its controls.
 	 */

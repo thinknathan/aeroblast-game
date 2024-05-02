@@ -4,6 +4,7 @@
 	"editor.formatOnPaste": true,
 	"editor.tabSize": 2,
 	"editor.detectIndentation": false,
+	"eslint.experimental.useFlatConfig": true,
 	"[typescript]": {
 		"editor.defaultFormatter": "esbenp.prettier-vscode"
 	},
@@ -58,9 +59,6 @@
 		"*.tilesource": "textproto",
 		"*.appmanifest": "yaml"
 	},
-	"files.exclude": {
-		"node_modules/": true
-	},
 	"typescript.tsdk": "node_modules\\typescript\\lib",
 	"search.exclude": {
 		"**/node_modules": true,
@@ -68,7 +66,6 @@
 		"**/*.code-search": true,
 		"undefined/**": true,
 		"**/build/**": true,
-		"patches/": true,
 		"**/*.collection": true,
 		"**/*.atlas": true,
 		"**/icon_*.png": true

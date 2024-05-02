@@ -25,8 +25,10 @@ app/lualib_bundle.lua
 app/manifest.*.der
 *.map
 *.render_script
+*.gui_script
 *.script
 *.lua
+!app/prometheus.lua
 !src/**
 
 # OS

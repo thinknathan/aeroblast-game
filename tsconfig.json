@@ -25,7 +25,7 @@
 			"./node_modules/@types",
 			"./node_modules/@typescript-to-lua"
 		],
-		"types": ["language-extensions", "tsd-boom", "tsd-xmath", "types"],
+		"types": ["language-extensions", "types"],
 		"verbatimModuleSyntax": true
 	},
 	"exclude": ["./node_modules/*", "./plugins/*"],
@@ -38,6 +38,11 @@
 			{
 				"match": ".*\\..*script.ts$",
 				"name": "tstl-export-to-global"
+			},
+			{
+				"match": ".*.lua$",
+				"exportRename": "M",
+				"name": "tstl-export-rename"
 			},
 			{
 				"name": "tstl-trim-extensions"

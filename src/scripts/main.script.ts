@@ -1,4 +1,4 @@
-/* Copyright (c) Nathan Bolton (GPL-3.0 OR MPL-2.0) | https://github.com/thinknathan/aeroblast-game */
+/* Copyright (c) Nathan Bolton (AGPL-3.0-or-later) | https://github.com/thinknathan/aeroblast-game */
 /** @noSelfInFile **/
 
 /**
@@ -15,7 +15,7 @@ interface Game {
 	readonly __mainAtlas: hash;
 }
 
-export const init: ScriptInit<Game> = function (this: Game): void {
+export const init: ScriptInit<Game> = function (this): void {
 	// Create properties that can be set in the editor.
 	go.property('mainAtlas', resource.atlas());
 

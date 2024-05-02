@@ -63,6 +63,7 @@ platforms:
       excludeSymbols: [ProfilerExt]
       symbols: []
       libs: [physics_2d, record_null, profilerext_null, liveupdate_null]
+      dynamicLibs: []
       linkFlags: []
   x86-win32:
     context:

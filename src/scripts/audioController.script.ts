@@ -1,4 +1,4 @@
-/* Copyright (c) Nathan Bolton (GPL-3.0 OR MPL-2.0) | https://github.com/thinknathan/aeroblast-game */
+/* Copyright (c) Nathan Bolton (AGPL-3.0-or-later) | https://github.com/thinknathan/aeroblast-game */
 /** @noSelfInFile **/
 
 import * as state from '../modules/state';
@@ -33,6 +33,7 @@ const activeSounds: SoundTimers = new LuaMap();
 // Store global as a local for faster access
 const defSoundPlay = sound.play;
 const defSoundStop = sound.stop;
+const defSoundPause = sound.pause;
 
 // Store a table to re-use to save memory
 const soundTable = {
@@ -97,9 +98,7 @@ const playAudio = function (
 	}
 };
 
-export const init: ScriptInit<AudioController> = function (
-	this: AudioController,
-) {
+export const init: ScriptInit<AudioController> = function (this) {
 	// BGM
 	soundUrls.set('bgm_gameover', msg.url('/audio_controller#bgm_gameover'));
 	soundUrls.set('bgm_gameplay', msg.url('/audio_controller#bgm_gameplay'));
@@ -133,12 +132,24 @@ export const init: ScriptInit<AudioController> = function (
 	soundUrls.set('sfx_pickup3', msg.url('/audio_controller#sfx_pickup3'));
 	soundUrls.set('sfx_pickup4', msg.url('/audio_controller#sfx_pickup4'));
 	soundUrls.set('sfx_pickup5', msg.url('/audio_controller#sfx_pickup5'));
+
+	// Mute BGM when losing focus
+	window.set_listener(function (this: AudioController, event, _data) {
+		if (event === window.WINDOW_EVENT_FOCUS_GAINED) {
+			if (currentBgm !== '') {
+				print('Resuming BGM:', currentBgm);
+				defSoundPause(soundUrls.get(currentBgm)!, false);
+			}
+		} else if (event === window.WINDOW_EVENT_FOCUS_LOST) {
+			if (currentBgm !== '') {
+				print('Pausing BGM:', currentBgm);
+				defSoundPause(soundUrls.get(currentBgm)!, true);
+			}
+		}
+	});
 };
 
-export const update: ScriptUpdate<AudioController> = function (
-	this: AudioController,
-	dt: number,
-): void {
+export const update: ScriptUpdate<AudioController> = function (this, dt): void {
 	// Count down the stored timers
 	for (const [key] of activeSounds) {
 		activeSounds.set(key, activeSounds.get(key)! - dt);
@@ -165,10 +176,10 @@ const testBgmMessage = (
 /** @inlineEnd */
 
 export const on_message: ScriptOnMessage<AudioController> = function (
-	this: AudioController,
-	message_id: hash,
-	message: unknown,
-	_sender: url,
+	this,
+	message_id,
+	message,
+	_sender,
 ): void {
 	if (testSfxMessage(message_id, message)) {
 		playAudio(
